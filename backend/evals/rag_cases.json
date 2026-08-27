@@ -1,0 +1,4 @@
+[
+  {"query":"退款审批规则是什么","relevant_document_ids":["refund-policy"]},
+  {"query":"生产数据库变更流程","relevant_document_ids":["database-change-runbook"]}
+]

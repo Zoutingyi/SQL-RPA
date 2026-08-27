@@ -1,0 +1,5 @@
+[project]
+name = "sql-rpa"
+version = "0.2.0"
+requires-python = ">=3.12,<3.15"
+dependencies = []

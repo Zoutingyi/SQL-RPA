@@ -1,0 +1,5 @@
+[
+  {"question":"查询订单表有多少记录","expected_intent":"database_query","required_tools":["get_db_schema","query_db"]},
+  {"question":"更新用户表中 id=1 的名字","expected_intent":"database_modify","required_tools":["get_db_schema","execute_sql"]},
+  {"question":"SELECT id FROM users LIMIT 10","expected_intent":"database_query","required_tools":["query_db"]}
+]

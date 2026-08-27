@@ -1,0 +1,70 @@
+# ── Python ──
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+*.egg
+.venv/
+venv/
+
+# ── Node / Frontend ──
+node_modules/
+frontend/dist/
+
+# ── IDE & Editor ──
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ── OS ──
+.DS_Store
+Thumbs.db
+
+# ── Sensitive config (contains real API keys) ──
+.env
+.env.local
+backend/.env
+frontend/.env
+frontend/.env.*
+*.env.local
+
+# ── Runtime data ──
+data/
+backend/data/
+
+# ── Logs ──
+*.log
+logs/
+
+# ── Pytest ──
+.pytest_cache/
+.coverage
+coverage.xml
+htmlcov/
+
+# ── Qdrant local storage ──
+qdrant/
+# Organization migration drill database copies may contain sensitive data.
+reviews/organization-drill-*/*.db
+# User migration verification copies can contain account and profile data.
+reviews/user-remediation-*/*.db
+reviews/user-remediation-*/*.db-wal
+reviews/user-remediation-*/*.db-shm
+# Production migration backups contain account data and must never be committed.
+reviews/user-production-migration-*/*.db
+reviews/user-production-migration-*/*.db-wal
+reviews/user-production-migration-*/*.db-shm
+reviews/user-delivery-hardening-*/*.db
+reviews/user-delivery-hardening-*/*.db-wal
+reviews/user-delivery-hardening-*/*.db-shm
+# Raw migration inventories and generated coverage artifacts can contain
+# account identifiers, password-hash checksums, or local absolute paths.
+reviews/organization-drill-*/*.json
+reviews/user-remediation-*/*.json
+reviews/user-production-migration-*/*.json
+reviews/organization-coverage/backend-full-junit.xml
+reviews/organization-coverage/coverage.json
+reviews/organization-coverage/coverage.xml
+reviews/organization-coverage/html/

@@ -1,0 +1,20 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Validate semantic tag and changelog
+        run: |
+          python -c "import os,re; t=os.environ['GITHUB_REF_NAME']; assert re.fullmatch(r'v\\d+\\.\\d+\\.\\d+',t), t"
+          grep -Fq "## [${GITHUB_REF_NAME#v}]" CHANGELOG.md
+      - uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true

@@ -1,0 +1,54 @@
+services:
+  migrate:
+    build:
+      context: ./backend
+    command: ["python", "-m", "alembic", "-c", "alembic.ini", "upgrade", "head"]
+    environment:
+      APP_ENV: production
+      SQL_RPA_SECRET_KEY: ${SQL_RPA_SECRET_KEY:?SQL_RPA_SECRET_KEY is required}
+      API_KEY: ${API_KEY:?API_KEY is required}
+      SQL_RPA_ALEMBIC_DATABASE_URL: sqlite:////data/rag_agent.db
+    volumes:
+      - sql-rpa-data:/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      APP_ENV: production
+      MULTI_TENANT_ENABLED: ${MULTI_TENANT_ENABLED:-true}
+      DEFAULT_TENANT_ID: ${DEFAULT_TENANT_ID:-default}
+      SQL_RPA_SECRET_KEY: ${SQL_RPA_SECRET_KEY:?SQL_RPA_SECRET_KEY is required}
+      API_KEY: ${API_KEY:?API_KEY is required}
+      SQL_RPA_ADMIN_USERNAME: ${SQL_RPA_ADMIN_USERNAME:-admin}
+      SQL_RPA_ADMIN_PASSWORD: ${SQL_RPA_ADMIN_PASSWORD:?SQL_RPA_ADMIN_PASSWORD is required}
+      DB_TYPE: ${DB_TYPE:-sqlite}
+      DB_SQLITE_PATH: /data/rpa.db
+      DATABASE_URL: sqlite+aiosqlite:////data/rag_agent.db
+      UPLOAD_DIR: /data/uploads
+    volumes:
+      - sql-rpa-data:/data
+    depends_on:
+      migrate:
+        condition: service_completed_successfully
+    ports:
+      - "8000:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/readiness')"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+  frontend:
+    build:
+      context: ./frontend
+      args:
+        VITE_USER_MANAGEMENT_V1: ${VITE_USER_MANAGEMENT_V1:-true}
+    depends_on:
+      backend:
+        condition: service_healthy
+    ports:
+      - "80:80"
+
+volumes:
+  sql-rpa-data:

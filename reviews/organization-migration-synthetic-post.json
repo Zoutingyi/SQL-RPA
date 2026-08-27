@@ -1,0 +1,11 @@
+{
+  "run_id": "07a125c9-f85c-45f9-bf71-e0dab58f105d",
+  "phase": "post",
+  "source_label": "synthetic-rehearsal",
+  "counts": {},
+  "conservation": {},
+  "conserved": true,
+  "issues": [],
+  "status": "passed",
+  "checksum": "40d4759cc1ff13a9ee4475ccbfe9e4a12c61bbd80551c53ee304df09951e0ba0"
+}

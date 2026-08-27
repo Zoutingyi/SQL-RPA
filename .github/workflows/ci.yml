@@ -1,0 +1,189 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install backend dependencies
+        working-directory: backend
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt pytest pytest-asyncio pytest-cov ruff
+      - name: Lint backend
+        working-directory: backend
+        run: ruff check . --select E9,F63,F7,F82
+      - name: Compile backend
+        working-directory: backend
+        run: python -m compileall -q .
+      - name: Apply internal database migrations
+        env:
+          PYTHONPATH: backend
+          APP_ENV: development
+          API_KEY: ""
+        run: python -m alembic -c alembic.ini upgrade head
+      - name: Check frozen user API contract snapshot
+        env:
+          PYTHONPATH: backend
+          APP_ENV: development
+          API_KEY: ""
+        run: python backend/scripts/export_user_contract.py --check
+      - name: Run backend tests
+        working-directory: backend
+        env:
+          APP_ENV: development
+          API_KEY: ""
+        run: pytest tests -q
+      - name: Enforce organization statement and branch coverage
+        working-directory: backend
+        env:
+          APP_ENV: development
+          API_KEY: ""
+        run: |
+          pytest tests/test_organization_models.py tests/test_department_routes.py tests/test_organization_scope_matrix.py tests/test_organization_migration_audit.py tests/test_organization_api_coverage.py --cov=organization_context --cov=organization_service --cov=api.departments --cov-branch --cov-report=json:../reviews/organization-coverage/coverage.json --cov-report=xml:../reviews/organization-coverage/coverage.xml --cov-report=html:../reviews/organization-coverage/html -q
+          python scripts/check_organization_coverage.py ../reviews/organization-coverage/coverage.json --min-statements 90 --min-branches 85
+      - name: Upload organization coverage reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: organization-coverage
+          path: reviews/organization-coverage/
+          retention-days: 30
+      - name: Run golden SQL, RAG and safety evaluation gate
+        working-directory: backend
+        run: pytest tests/test_evals.py -q
+
+  frontend:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm ci
+      - name: Lint frontend
+        working-directory: frontend
+        run: npm run lint
+      - name: Check organization context contract
+        working-directory: frontend
+        run: npm run check:organization
+      - name: Check OpenAPI, TypeScript DTO and error-code snapshot
+        working-directory: frontend
+        run: npm run check:user-contract
+      - name: Test frontend
+        working-directory: frontend
+        run: npm run test
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          VITE_USER_MANAGEMENT_V1: "true"
+        run: npm run build
+      - name: Install Playwright Chromium
+        working-directory: frontend
+        run: npx playwright install --with-deps chromium
+      - name: Run required browser E2E
+        working-directory: frontend
+        env:
+          VITE_USER_MANAGEMENT_V1: "true"
+        run: npm run test:e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: frontend/playwright-report/
+          retention-days: 14
+
+  real-integrations:
+    runs-on: ubuntu-latest
+    services:
+      mysql:
+        image: mysql:8.4
+        env:
+          MYSQL_DATABASE: sqlrpa
+          MYSQL_USER: sqlrpa
+          MYSQL_PASSWORD: sqlrpa
+          MYSQL_ROOT_PASSWORD: root
+        ports:
+          - 3306:3306
+        options: >-
+          --health-cmd="mysqladmin ping -h localhost -uroot -proot"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      qdrant:
+        image: qdrant/qdrant:v1.15.1
+        ports:
+          - 6333:6333
+      postgres:
+        image: postgres:17
+        env:
+          POSTGRES_DB: sqlrpa
+          POSTGRES_USER: sqlrpa
+          POSTGRES_PASSWORD: sqlrpa
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U sqlrpa -d sqlrpa"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+      redis:
+        image: redis:7.4-alpine
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd="redis-cli ping"
+          --health-interval=10s --health-timeout=5s --health-retries=10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install integration dependencies
+        working-directory: backend
+        run: pip install -r requirements.txt pytest pytest-asyncio
+      - name: Apply SQLite and PostgreSQL migrations independently
+        env:
+          PYTHONPATH: backend
+          APP_ENV: development
+          API_KEY: ""
+        run: |
+          python -m alembic -c alembic.ini upgrade head
+          SQL_RPA_ALEMBIC_DATABASE_URL=postgresql+psycopg://sqlrpa:sqlrpa@127.0.0.1:5432/sqlrpa python -m alembic -c alembic.ini upgrade head
+      - name: Exercise PostgreSQL legacy-data upgrade, rollback and re-upgrade
+        env:
+          PYTHONPATH: backend
+          APP_ENV: development
+          API_KEY: ""
+          SQL_RPA_ALEMBIC_DATABASE_URL: postgresql+psycopg://sqlrpa:sqlrpa@127.0.0.1:5432/sqlrpa
+        run: python backend/scripts/migration_roundtrip.py
+      - name: Run real MySQL, PostgreSQL and Qdrant acceptance tests
+        working-directory: backend
+        env:
+          APP_ENV: development
+          API_KEY: ""
+          RUN_REAL_INTEGRATIONS: "1"
+          REDIS_URL: redis://127.0.0.1:6379/0
+        run: pytest tests/test_real_integrations.py -q
+
+  user-acceptance-gate:
+    name: user-acceptance-gate
+    if: always()
+    needs: [backend, frontend, real-integrations]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Enforce all user acceptance jobs
+        env:
+          BACKEND_RESULT: ${{ needs.backend.result }}
+          FRONTEND_RESULT: ${{ needs.frontend.result }}
+          INTEGRATION_RESULT: ${{ needs.real-integrations.result }}
+        run: |
+          test "$BACKEND_RESULT" = success
+          test "$FRONTEND_RESULT" = success
+          test "$INTEGRATION_RESULT" = success

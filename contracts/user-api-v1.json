@@ -1,0 +1,861 @@
+{
+  "contract_version": "user-api-v1",
+  "error_codes": {
+    "400": "INVALID_REQUEST",
+    "401": "AUTH_REQUIRED",
+    "403": "PERMISSION_DENIED",
+    "404": "NOT_FOUND",
+    "409": "CONFLICT",
+    "422": "VALIDATION_ERROR",
+    "429": "RATE_LIMITED",
+    "500": "INTERNAL_ERROR",
+    "503": "SERVICE_UNAVAILABLE"
+  },
+  "paths": {
+    "/api/auth/change-password": {
+      "post": {
+        "operationId": "change_password_api_auth_change_password_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Change Password",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "login_api_auth_login_post",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Login",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "me_api_auth_me_get",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          }
+        },
+        "summary": "Me",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/users": {
+      "get": {
+        "operationId": "list_users_api_auth_users_get",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "page",
+            "required": false,
+            "schema": {
+              "default": 1,
+              "title": "Page",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "page_size",
+            "required": false,
+            "schema": {
+              "default": 20,
+              "title": "Page Size",
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Query"
+            }
+          },
+          {
+            "in": "query",
+            "name": "status",
+            "required": false,
+            "schema": {
+              "default": "all",
+              "title": "Status",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserListResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "List Users",
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "create_user_api_auth_users_post",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": true,
+            "schema": {
+              "maxLength": 200,
+              "minLength": 1,
+              "title": "Idempotency-Key",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateUserResponse"
+                }
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Create User",
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/users/{user_id}": {
+      "get": {
+        "operationId": "get_user_api_auth_users__user_id__get",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Get User",
+        "tags": [
+          "auth"
+        ]
+      },
+      "patch": {
+        "operationId": "update_user_api_auth_users__user_id__patch",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "user_id",
+            "required": true,
+            "schema": {
+              "title": "User Id",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            },
+            "description": "Successful Response"
+          },
+          "422": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            },
+            "description": "Validation Error"
+          }
+        },
+        "summary": "Update User",
+        "tags": [
+          "auth"
+        ]
+      }
+    }
+  },
+  "schemas": {
+    "ChangePasswordRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "confirm_password": {
+          "title": "Confirm Password",
+          "type": "string"
+        },
+        "current_password": {
+          "title": "Current Password",
+          "type": "string"
+        },
+        "new_password": {
+          "title": "New Password",
+          "type": "string"
+        }
+      },
+      "required": [
+        "current_password",
+        "new_password",
+        "confirm_password"
+      ],
+      "title": "ChangePasswordRequest",
+      "type": "object"
+    },
+    "CreateUserRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "display_name": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Display Name",
+          "type": "string"
+        },
+        "job_title": {
+          "maxLength": 200,
+          "minLength": 1,
+          "title": "Job Title",
+          "type": "string"
+        },
+        "organization_id": {
+          "maxLength": 36,
+          "minLength": 1,
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "password": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Password"
+        },
+        "phone": {
+          "maxLength": 32,
+          "minLength": 1,
+          "title": "Phone",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/UserRole"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "username": {
+          "maxLength": 64,
+          "minLength": 3,
+          "pattern": "^[A-Za-z0-9._-]+$",
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "display_name",
+        "organization_id",
+        "job_title",
+        "phone"
+      ],
+      "title": "CreateUserRequest",
+      "type": "object"
+    },
+    "CreateUserResponse": {
+      "properties": {
+        "must_change_password": {
+          "title": "Must Change Password",
+          "type": "boolean"
+        },
+        "primary_membership": {
+          "$ref": "#/components/schemas/MembershipSummary"
+        },
+        "used_default_password": {
+          "title": "Used Default Password",
+          "type": "boolean"
+        },
+        "user": {
+          "$ref": "#/components/schemas/UserSummary"
+        }
+      },
+      "required": [
+        "user",
+        "primary_membership",
+        "used_default_password",
+        "must_change_password"
+      ],
+      "title": "CreateUserResponse",
+      "type": "object"
+    },
+    "HTTPValidationError": {
+      "properties": {
+        "detail": {
+          "items": {
+            "$ref": "#/components/schemas/ValidationError"
+          },
+          "title": "Detail",
+          "type": "array"
+        }
+      },
+      "title": "HTTPValidationError",
+      "type": "object"
+    },
+    "LoginRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "password": {
+          "title": "Password",
+          "type": "string"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "username",
+        "password"
+      ],
+      "title": "LoginRequest",
+      "type": "object"
+    },
+    "LoginResponse": {
+      "additionalProperties": true,
+      "properties": {
+        "access_token": {
+          "title": "Access Token",
+          "type": "string"
+        },
+        "current_membership": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/MembershipSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "organization": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Organization"
+        },
+        "organization_memberships": {
+          "items": {
+            "$ref": "#/components/schemas/MembershipSummary"
+          },
+          "title": "Organization Memberships",
+          "type": "array"
+        },
+        "token_type": {
+          "title": "Token Type",
+          "type": "string"
+        },
+        "user": {
+          "$ref": "#/components/schemas/UserSummary"
+        }
+      },
+      "required": [
+        "access_token",
+        "token_type",
+        "organization",
+        "current_membership",
+        "organization_memberships",
+        "user"
+      ],
+      "title": "LoginResponse",
+      "type": "object"
+    },
+    "MeResponse": {
+      "additionalProperties": true,
+      "properties": {
+        "current_membership": {
+          "anyOf": [
+            {
+              "$ref": "#/components/schemas/MembershipSummary"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "is_platform_admin": {
+          "title": "Is Platform Admin",
+          "type": "boolean"
+        },
+        "must_change_password": {
+          "title": "Must Change Password",
+          "type": "boolean"
+        },
+        "organization": {
+          "anyOf": [
+            {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Organization"
+        },
+        "organization_memberships": {
+          "items": {
+            "$ref": "#/components/schemas/MembershipSummary"
+          },
+          "title": "Organization Memberships",
+          "type": "array"
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Phone"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "display_name",
+        "phone",
+        "organization",
+        "current_membership",
+        "organization_memberships",
+        "is_platform_admin",
+        "must_change_password"
+      ],
+      "title": "MeResponse",
+      "type": "object"
+    },
+    "MembershipSummary": {
+      "additionalProperties": true,
+      "properties": {
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "is_primary": {
+          "title": "Is Primary",
+          "type": "boolean"
+        },
+        "job_title": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Job Title"
+        },
+        "organization_id": {
+          "title": "Organization Id",
+          "type": "string"
+        },
+        "organization_name": {
+          "title": "Organization Name",
+          "type": "string"
+        },
+        "role": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Role"
+        }
+      },
+      "required": [
+        "id",
+        "organization_id",
+        "organization_name",
+        "is_primary"
+      ],
+      "title": "MembershipSummary",
+      "type": "object"
+    },
+    "UpdateUserRequest": {
+      "additionalProperties": false,
+      "properties": {
+        "can_view_full_phone": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Can View Full Phone"
+        },
+        "display_name": {
+          "anyOf": [
+            {
+              "maxLength": 200,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Display Name"
+        },
+        "is_active": {
+          "anyOf": [
+            {
+              "type": "boolean"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Is Active"
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "maxLength": 32,
+              "minLength": 1,
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Phone"
+        },
+        "version": {
+          "minimum": 1.0,
+          "title": "Version",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "version"
+      ],
+      "title": "UpdateUserRequest",
+      "type": "object"
+    },
+    "UserListResponse": {
+      "additionalProperties": true,
+      "properties": {
+        "items": {
+          "items": {
+            "additionalProperties": true,
+            "type": "object"
+          },
+          "title": "Items",
+          "type": "array"
+        },
+        "page": {
+          "title": "Page",
+          "type": "integer"
+        },
+        "page_size": {
+          "title": "Page Size",
+          "type": "integer"
+        },
+        "pages": {
+          "title": "Pages",
+          "type": "integer"
+        },
+        "total": {
+          "title": "Total",
+          "type": "integer"
+        }
+      },
+      "required": [
+        "items",
+        "page",
+        "page_size",
+        "total",
+        "pages"
+      ],
+      "title": "UserListResponse",
+      "type": "object"
+    },
+    "UserRole": {
+      "enum": [
+        "viewer",
+        "operator",
+        "approver",
+        "admin"
+      ],
+      "title": "UserRole",
+      "type": "string"
+    },
+    "UserSummary": {
+      "additionalProperties": true,
+      "properties": {
+        "display_name": {
+          "title": "Display Name",
+          "type": "string"
+        },
+        "id": {
+          "title": "Id",
+          "type": "string"
+        },
+        "is_platform_admin": {
+          "title": "Is Platform Admin",
+          "type": "boolean"
+        },
+        "must_change_password": {
+          "title": "Must Change Password",
+          "type": "boolean"
+        },
+        "phone": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ],
+          "title": "Phone"
+        },
+        "username": {
+          "title": "Username",
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "display_name",
+        "is_platform_admin",
+        "must_change_password"
+      ],
+      "title": "UserSummary",
+      "type": "object"
+    },
+    "ValidationError": {
+      "properties": {
+        "ctx": {
+          "title": "Context",
+          "type": "object"
+        },
+        "input": {
+          "title": "Input"
+        },
+        "loc": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "integer"
+              }
+            ]
+          },
+          "title": "Location",
+          "type": "array"
+        },
+        "msg": {
+          "title": "Message",
+          "type": "string"
+        },
+        "type": {
+          "title": "Error Type",
+          "type": "string"
+        }
+      },
+      "required": [
+        "loc",
+        "msg",
+        "type"
+      ],
+      "title": "ValidationError",
+      "type": "object"
+    }
+  }
+}
